@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Battleship Game - JavaScript Edition</title>
+
+	<link rel="stylesheet" href="game_styles.css">
+</head>
+<body>
+
+<header id="title">
+<h1>Battleship</h1>
+<h5>JavaScript Edition</h5>
+</header>
+<br>
+
+<form name="gameForm">
+
+</form>
+
+<script type="text/javascript">
+
+var rowNbr = 10;
+var columnNbr = 10;
+var playerPos = [0, 0];
+
+//stores form submission infos
+var postArr = [];
+
+//dictionary that stores info of ships
+var battleships = new Map();
+battleships.set('Destroyer', 2);
+battleships.set('Submarine', 3);
+battleships.set('Cruiser', 3);
+battleships.set('Battleship', 4);
+battleships.set('Carrier', 5);
+
+//for steps 3+ to decide winner
+function totalShips(arr)
+{
+	var sum = 0;
+	arr.forEach((v) => 
+	{
+	  sum += v;
+	});
+	return sum;
+};
+
+//to decide the winner in steps 3+
+var totalShipTiles = totalShips(battleships);
+
+//the boards for each player
+var player1Board;
+var player2Board;
+var player1PegBoard;
+var player2PegBoard;
+
+//to intercept form submission
+window.addEventListener("load", function()
+{
+  document.getElementsByName('gameForm')[0].addEventListener("submit", (event) => {formControl(event)})
+});
+
+function createGrid()
+{
+	var grid = document.createElement("TABLE");
+	grid.setAttribute("id", "gridTable");
+	document.body.appendChild(grid);
+
+	player1Board = new Array(rowNbr);
+	player2Board = new Array(rowNbr);
+
+	//rows
+	for (var i = 0; i < rowNbr; i++)
+	{
+		player1Board[i] = new Array(columnNbr);
+		player2Board[i] = new Array(columnNbr);
+
+		var aRow = document.createElement("TR");
+		var rowName = "row" + i;
+		aRow.setAttribute('id', rowName);
+		document.getElementById("gridTable").appendChild(aRow);
+
+		//columns
+		for (var j = 0; j < columnNbr; j++)
+		{
+			player1Board[i][j] = 0;
+			player2Board[i][j] = 0;
+
+			var col = document.createElement("TD");
+			if(playerPos[0] == i && playerPos[1] == j)
+			{
+				var text = "⯐";
+				col.setAttribute("id", "player");
+			}
+			else
+			{
+				var text = "■";
+			}
+  			col.textContent = text;
+  			aRow.appendChild(col);
+		}
+	}
+}
+
+//calling function
+createGrid();
+
+//iteration of game Engine
+var step = 0;
+
+//maintains boat type to iterate from battleships
+var boatType = 0;
+
+//calling function
+gameEngine();
+
+
+function gameEngine()
+{
+	switch(step)
+	{
+		case 0:
+		initializePlayers();
+		break;
+		case 1:
+		placingBoats(0, boatType);
+		break;
+		case 2:
+		placingBoats(1, boatType);
+		break;
+		case 3:
+		gameRotation(0);
+		break;
+		case 'end1':
+		endGame(0);
+		break;
+		case 'end2':
+		endGame(1);
+		break;
+	}
+	
+}
+
+function endGame(playerInd)
+{
+	//empty the form
+	document.getElementsByName("gameForm")[0].innerHTML = "";
+	//remove the table
+	var grid = document.getElementById("gridTable");
+  	grid.parentNode.removeChild(grid);
+
+  	var bodyPage = document.getElementsByName("gameForm")[0];
+	var instructions = 	document.createElement("P");
+	instructions.textContent = "Congratulations, " + postArr[playerInd] + " won the game!!";
+	var instructions2 = document.createElement("P");
+	instructions2.textContent = "Final Score:";
+
+	var instructions3 = document.createElement("P");
+	instructions3.textContent = postArr[playerInd] + ": " + totalShipTiles;
+
+	var instructions4 = document.createElement("P");
+	instructions4.textContent = postArr[(playerInd+1) % 2] + ": " + "Less";
+
+	var playerButton = document.createElement("INPUT");
+	playerButton.setAttribute("type", "button");
+	var text = "Restart Game";
+	playerButton.setAttribute("value", text);
+	var functionSend = "location.reload();";
+	playerButton.setAttribute("onclick", functionSend);
+
+	bodyPage.appendChild(instructions);
+	bodyPage.appendChild(instructions2);
+	bodyPage.appendChild(instructions3);
+	bodyPage.appendChild(instructions4);
+	bodyPage.appendChild(playerButton);
+}
+
+function gameRotation(playerTurn)
+{
+	//initialize peg board
+	if (typeof player1PegBoard === 'undefined' || typeof player2PegBoard === 'undefined')
+	{
+    	player1PegBoard = new Array(rowNbr);
+		player2PegBoard = new Array(rowNbr);
+		for (var i = 0; i < player1PegBoard.length; i++)
+		{
+			player1PegBoard[i] = new Array(columnNbr);
+			player2PegBoard[i] = new Array(columnNbr);
+
+			for (var j = 0; j < columnNbr; j++)
+			{
+				if(i == 0 && j == 0)
+				{
+					playerPos = [i, j];
+					player1PegBoard[i][j] = "player";
+					player2PegBoard[i][j] = "player";
+				}
+				else
+				{
+					player1PegBoard[i][j] = 0;
+					player2PegBoard[i][j] = 0;
+				}
+
+			}
+		}
+	}
+
+	//empty the form
+	document.getElementsByName("gameForm")[0].innerHTML = "";
+	//remove the table
+	var grid = document.getElementById("gridTable");
+  	grid.parentNode.removeChild(grid);
+
+	var bodyPage = document.getElementsByName("gameForm")[0];
+	
+	var playerButton = document.createElement("INPUT");
+	playerButton.setAttribute("type", "button");
+	var text = postArr[playerTurn] + "'s ship board";
+	playerButton.setAttribute("value", text);
+	var functionSend = "displayPlayerBoard(" + playerTurn + ")";
+	playerButton.setAttribute("onclick", functionSend);
+	var instructions = 	document.createElement("P");
+	instructions.textContent = postArr[playerTurn] + "'s  pick:";
+	
+	bodyPage.appendChild(instructions);
+	bodyPage.appendChild(playerButton);
+	
+	var buttonStr = '<br><br><input name = "submit" type="submit" value="Submit"><br><br>';
+	bodyPage.insertAdjacentHTML('beforeend', buttonStr);
+
+	//creating the table once more (similar to createGrid)
+
+	var playerBoard;
+
+	if(playerTurn == 0)
+	{
+		playerBoard = player1PegBoard;
+	}
+	else
+	{
+		playerBoard = player2PegBoard;
+	}
+
+	//recreate table
+	grid = document.createElement("TABLE");
+	grid.setAttribute("id", "gridTable");
+	document.body.appendChild(grid);
+	
+	//rows
+	for (var i = 0; i < playerBoard.length; i++)
+	{
+		var aRow = document.createElement("TR");
+		var rowName = "row" + i;
+		aRow.setAttribute('id', rowName);
+		grid.appendChild(aRow);
+
+		//columns
+		for (var j = 0; j < playerBoard[i].length; j++)
+		{
+			var col = document.createElement("TD");
+			var text;
+			if(playerBoard[i][j] == "player")
+			{
+				col.setAttribute("id", "player");
+				text = "⯐";
+				playerPos = [i, j];
+			}
+			else if(/peg/.test(playerBoard[i][j]))
+			{
+				col.setAttribute("class", playerBoard[i][j]);
+				text = "▧";
+			}
+			else
+			{
+				text = "■";
+			}
+
+  			col.textContent = text;
+  			aRow.appendChild(col);
+		}
+	}
+}
+
+function displayPlayerBoard(playerTurn)
+{
+	//empty the form
+	document.getElementsByName("gameForm")[0].innerHTML = "";
+	//remove the table
+	var grid = document.getElementById("gridTable");
+  	grid.parentNode.removeChild(grid);
+
+	var bodyPage = document.getElementsByName("gameForm")[0];
+
+	var playerButton = document.createElement("INPUT");
+	playerButton.setAttribute("type", "button");
+	var text = postArr[playerTurn] + "'s peg board";
+	playerButton.setAttribute("value", text);
+	var functionSend = "gameRotation(" + playerTurn + ")";
+	playerButton.setAttribute("onclick", functionSend);
+
+
+	var instructions = 	document.createElement("P");
+	instructions.textContent = postArr[playerTurn] + "'s  pick:";
+	bodyPage.appendChild(instructions);
+	bodyPage.appendChild(playerButton);
+
+	//creating the table once more (similar to createGrid)
+
+	var playerBoard;
+
+	if(playerTurn == 0)
+	{
+		playerBoard = player1Board;
+	}
+	else
+	{
+		playerBoard = player2Board;
+	}
+
+	//recreate table
+	grid = document.createElement("TABLE");
+	grid.setAttribute("id", "gridTable");
+	document.body.appendChild(grid);
+	
+	//rows
+	for (var i = 0; i < playerBoard.length; i++)
+	{
+		var aRow = document.createElement("TR");
+		var rowName = "row" + i;
+		aRow.setAttribute('id', rowName);
+		grid.appendChild(aRow);
+
+		//columns
+		for (var j = 0; j < playerBoard[i].length; j++)
+		{
+			var col = document.createElement("TD");
+			var text;
+			if(playerBoard[i][j] != 0)
+			{
+				col.setAttribute("class", playerBoard[i][j]);
+				text = "▣";
+			}
+			else
+			{
+				text = "■";
+			}
+
+  			col.textContent = text;
+  			aRow.appendChild(col);
+		}
+	}
+
+}
+
+function placingBoats(playerNbr, boatType)
+{
+	var bodyPage = document.getElementsByName("gameForm")[0];
+
+		var boat = Array.from(battleships.keys())[boatType];
+
+		var instructions = 	document.createElement("P");
+
+		instructions.textContent = postArr[playerNbr] + ", please place your " + boat + " (" + battleships.get(boat) + " tiles):";
+
+		bodyPage.appendChild(instructions);
+	    
+	    // createShip(boat, 'd');
+
+	    // clearShip(boat, 'd');
+
+	    		//will need to record grid placement
+		var buttonStr = '<input name = "submit" type="submit" value="Submit"><br><br>';
+		bodyPage.insertAdjacentHTML('beforeend', buttonStr);
+
+}
+
+function createShip(boatName, position, playerNbr)
+{
+	var tilesTaken = battleships.get(boatName);
+	if(position == 0)
+	{
+	  	
+	}
+	else if(position == 1)
+	{
+	  	var tileToFill = playerPos[0] - 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPos = "row" + tileToFill;
+	  		var newPlayer = document.getElementById(newPos).cells[playerPos[1]];
+		  	var name = postArr[playerNbr] + "-ship" + boatName;
+		  	newPlayer.setAttribute("class", name);
+		  	newPlayer.textContent = "▣";
+		  	tileToFill--;
+
+	  	}
+	  	//new player: get left cell from player
+	  	
+	}
+	else if(position == 2)
+	{
+		nameRow = "row" + playerPos[0];
+	  	
+	  	var player = document.getElementById("player");
+	  	
+	  	var tileToFill = playerPos[1] + 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPlayer = document.getElementById(nameRow).cells[tileToFill];
+	  		var name = postArr[playerNbr] + "-ship" + boatName;
+		  	newPlayer.setAttribute("class", name);
+		  	newPlayer.textContent = "▣";
+		  	tileToFill++;
+	  	}
+	  	//new player: get left cell from player
+	  	
+	}
+	else if(position == 3)
+	{
+	  	var tileToFill = playerPos[0] + 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPos = "row" + tileToFill;
+	  		var newPlayer = document.getElementById(newPos).cells[playerPos[1]];
+		  	var name = postArr[playerNbr] + "-ship" + boatName;
+		  	newPlayer.setAttribute("class", name);
+		  	newPlayer.textContent = "▣";
+		  	tileToFill++;
+
+	  	}
+	  	//new player: get left cell from player
+	  	
+	}
+	else if(position == 4)
+	{
+		nameRow = "row" + playerPos[0];
+	  	
+	  	var player = document.getElementById("player");
+	  	
+	  	var tileToFill = playerPos[1] - 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPlayer = document.getElementById(nameRow).cells[tileToFill];
+		  	var name = postArr[playerNbr] + "-ship" + boatName;
+		  	newPlayer.setAttribute("class", name);
+		  	newPlayer.textContent = "▣";
+		  	tileToFill--;
+	  	}
+	  	//new player: get left cell from player
+	  	
+	}
+	
+}
+
+function clearShip(boatName, position)
+{
+	var tilesTaken = battleships.get(boatName);
+	if(position == 0)
+	{
+	  	
+	}
+	else if(position == 1)
+	{
+	  	var tileToFill = playerPos[0] - 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPos = "row" + tileToFill;
+	  		var newPlayer = document.getElementById(newPos).cells[playerPos[1]];
+		  	newPlayer.removeAttribute("class");
+		  	newPlayer.textContent = "■";
+		  	tileToFill--;
+
+
+	  	}
+	}
+	else if(position == 2)
+	{
+		nameRow = "row" + playerPos[0];
+	  	
+	  	var player = document.getElementById("player");
+	  	
+	  	var tileToFill = playerPos[1] + 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPlayer = document.getElementById(nameRow).cells[tileToFill];
+		  	newPlayer.removeAttribute("class");
+		  	newPlayer.textContent = "■";
+		  	tileToFill++;
+	  	}
+	  	//new player: get left cell from player
+	  	
+	}
+	else if(position == 3)
+	{
+	  	var tileToFill = playerPos[0] + 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPos = "row" + tileToFill;
+	  		var newPlayer = document.getElementById(newPos).cells[playerPos[1]];
+		  	newPlayer.removeAttribute("class");
+		  	newPlayer.textContent = "■";
+		  	tileToFill++;
+
+
+	  	}
+	  	//new player: get left cell from player
+	  	
+	}
+	else if(position == 4)
+	{
+		nameRow = "row" + playerPos[0];
+	  	
+	  	var player = document.getElementById("player");
+	  	
+	  	var tileToFill = playerPos[1] - 1;
+	  	for (var i = 0; i < tilesTaken; i++)
+	  	{
+	  		var newPlayer = document.getElementById(nameRow).cells[tileToFill];
+		  	newPlayer.removeAttribute("class");
+		  	newPlayer.textContent = "■";
+		  	tileToFill--;
+	  	}
+	  	//new player: get left cell from player
+	  	
+	}
+}
+
+
+function initializePlayers()
+{
+	var bodyPage = document.getElementsByName("gameForm")[0];
+	for (var i = 0; i < 2; i++)
+	{
+		var playerTemp = document.createElement("INPUT");
+		playerTemp.setAttribute("type", "text");
+		var instructions = 	document.createElement("P");
+		instructions.textContent = "Player " + (i+1) + "'s  name:";
+		bodyPage.appendChild(instructions);
+		bodyPage.appendChild(playerTemp);
+		var buttonStr = '<br><br><input name = "submit" type="submit" value="Submit"><br><br>';
+	}
+	bodyPage.insertAdjacentHTML('beforeend', buttonStr);
+}
+
+function formControl(e)
+{
+	//Text validation here (if required)
+
+  	e.preventDefault();
+	var formElem = document.getElementsByName("gameForm")[0].elements;
+
+	for (var i = 0; i < formElem.length; i++)
+	{
+		if (formElem[i].type != "submit")
+		{
+			postArr.push(formElem[i].value);
+		}
+	}
+
+	//empty the form
+	document.getElementsByName("gameForm")[0].innerHTML = "";
+	
+	//reset the enter bool check (for next boat placement)
+	spacePressed = false;
+	//keep the iteration on the boat
+	if(boatType >= 4 && (step == 1 || step == 2))
+	{
+		var boatsArr = document.querySelectorAll('[class*="-ship"]');
+		//Log the tile placement here for each board
+		boatsArr.forEach((element) =>
+			{
+				//places it in the matrix
+				if(step == 1)
+				{
+					player1Board[element.closest('TR').rowIndex][element.cellIndex] = element.getAttribute("class");
+				}
+				else if(step == 2)
+				{
+					player2Board[element.closest('TR').rowIndex][element.cellIndex] = element.getAttribute("class");
+				}
+				
+
+				element.textContent = "■";
+				element.removeAttribute("class");
+			});
+		boatType = 0;
+		step += 1;
+		gameEngine();
+
+	}
+	else if(boatType < 5 && (step == 1 || step == 2))
+	{
+		boatType += 1;
+		var player = document.getElementById("player");
+		var colsLeft = playerPos[1];
+		for (var i = 0; i < colsLeft; i++)
+		{
+			playerPos = left(playerPos);
+		}
+
+		var rowsLeft = playerPos[0];
+		for(var i = 0; i < rowsLeft; i++)
+		{
+			playerPos = up(playerPos);
+		}
+
+		gameEngine();
+	}
+	else if(step >= 3)
+	{
+		var playerToPeg = document.getElementById("player");
+
+		//player nbr 1
+		if(step % 2 == 1)
+		{
+			//hit on the boat of 2nd player
+			if(/ship/.test(player2Board[playerToPeg.closest('TR').rowIndex][playerToPeg.cellIndex]))
+			{
+				player1PegBoard[playerToPeg.closest('TR').rowIndex][playerToPeg.cellIndex] = "red-peg";
+				alert("Hit!");
+
+				var totalRedTiles = document.querySelectorAll('[class="red-peg"]');
+
+				alert("totalRed: " + totalShipTiles + "\nTotal atm: " + (totalRedTiles.length + 1));
+
+				//+ 1 since we just found a red tile
+				if(totalShipTiles == (totalRedTiles.length + 1))
+				{
+					//game over player 1 won
+					step = 'end1';
+					gameEngine();
+					return;
+				}
+			}
+			else
+			{
+				player1PegBoard[playerToPeg.closest('TR').rowIndex][playerToPeg.cellIndex] = "white-peg";
+				alert("Miss!");
+			}
+
+			//find player in peg board and remove it
+			for (var i = 0; i < player1PegBoard.length; i++) {
+				var found = player1PegBoard[i].findIndex(element => element == "player");
+				if( found != -1)
+				{
+					player1PegBoard[i][found] = 0;
+					break;
+				}
+			}
+
+			//find the nearest empty td (no class)
+			for (var i = 0; i < player1PegBoard.length; i++)
+			{
+				var found = player1PegBoard[i].findIndex(element => element == 0);
+				if(found != -1)
+				{
+					player1PegBoard[i][found] = "player";
+					playerPos = [i, found];
+					break;
+				}
+			}
+			
+		}
+		else
+		{
+			//hit on the boat of 2nd player
+			if(/ship/.test(player1Board[playerToPeg.closest('TR').rowIndex][playerToPeg.cellIndex]))
+			{
+				player2PegBoard[playerToPeg.closest('TR').rowIndex][playerToPeg.cellIndex] = "red-peg";
+				alert("Hit!");
+
+				var totalRedTiles = document.querySelectorAll('[class="red-peg"]');
+				//+ 1 since we just found a red tile
+				if(totalShipTiles == (totalRedTiles.length + 1))
+				{
+					//game over player 2 won
+					step = 'end2';
+					gameEngine();
+					return;
+				}
+			}
+			else
+			{
+				player2PegBoard[playerToPeg.closest('TR').rowIndex][playerToPeg.cellIndex] = "white-peg";
+				alert("Miss!");
+			}
+
+			//find player in peg board and remove it
+			for (var i = 0; i < player2PegBoard.length; i++) {
+				var found = player2PegBoard[i].findIndex(element => element == "player");
+				if( found != -1)
+				{
+					player2PegBoard[i][found] = 0;
+					break;
+				}
+			}
+
+			//find the nearest empty td (no class) to put player at
+			for (var i = 0; i < player2PegBoard.length; i++)
+			{
+				var found = player2PegBoard[i].findIndex(element => element == 0);
+				if(found != -1)
+				{
+					player2PegBoard[i][found] = "player";
+					playerPos = [i, found];
+					break;
+				}
+			}
+		}
+		
+		step += 1;
+		var newPlayerNbr = (step + 1) % 2;
+		gameRotation(newPlayerNbr);
+		
+	}
+	else
+	{
+		step += 1;
+		gameEngine();
+	}
+}
+
+var rotationBoat = 0;
+
+document.addEventListener("keypress", (event) => {movePlayer(event);});
+
+var spacePressed = false;
+function movePlayer(e)
+{
+	if(step >= 1)
+	{
+	switch(e.keyCode)
+	    {
+	    	//enter : boat placement
+	    	case 32:
+	    	//check if its the first enter
+	    	if((step == 1 || step == 2) && !spacePressed)
+	    	{
+		    	var boat = Array.from(battleships.keys())[boatType];
+				rotationBoat = 2;
+
+				var tilesTaken = battleships.get(boat);
+				var nameRow = "row" + playerPos[0];
+			  	
+			  	//validating the tiles on the right
+			  	var invalidTiles = false;
+			  	var tileToFill = playerPos[1] + 1;
+			  	for (var i = 0; i < tilesTaken; i++)
+			  	{
+			  		var newTile = document.getElementById(nameRow).cells[tileToFill];
+			  		if(/ship/.test(newTile.getAttribute("class")) || /peg/.test(newTile.getAttribute("class")))
+			  		{
+			  			invalidTiles = true;
+			  			break;
+			  		}
+			  		else
+			  		{
+			  			tileToFill++;
+			  		}
+			  	}
+
+			  	if(!invalidTiles)
+			  	{
+			  		createShip(boat, rotationBoat, step-1);
+					spacePressed = true;
+			  	}
+			  	else
+			  	{
+			  		spacePressed = false;
+			  	}
+	    	}
+	    	break;
+	    	case 119:
+	    	if(!spacePressed)
+	    		playerPos = up(playerPos);
+	    	break;
+	    	case 97:
+	    	if(!spacePressed)
+	    		playerPos = left(playerPos);
+	    	break;
+	    	case 115:
+	    	if(!spacePressed)
+	    		playerPos = down(playerPos);
+	    	break;
+	    	case 100:
+	    	if(!spacePressed)
+	    		playerPos = right(playerPos);
+	    	break;
+	    	case 113:
+	    	if(spacePressed)
+	    		playerPos = rotateLeft(playerPos);
+	    	break;
+	    	case 101:
+	    	if(spacePressed)
+	    		playerPos = rotateRight(playerPos);
+	    	break;
+	    	case 83:
+	    	if(!spacePressed)
+		        for (var i = 0; i < 2; i++)
+		        {
+		        	playerPos = down(playerPos);
+		        }
+	        break;
+	        case 68:
+	        if(!spacePressed)
+		        for (var i = 0; i < 2; i++)
+		        {
+		        	playerPos = right(playerPos);
+		        }
+	        break;
+	        case 87:
+	        if(!spacePressed)
+		        for (var i = 0; i < 2; i++)
+		        {
+		        	playerPos = up(playerPos);
+		        }
+	        break;
+	        case 65:
+	        if(!spacePressed)
+		        for (var i = 0; i < 2; i++)
+		        {
+		        	playerPos = left(playerPos);
+		        }
+	        break;
+	        case 81:
+	        if(spacePressed)
+		        for (var i = 0; i < 2; i++)
+		        {
+		        	playerPos = rotateLeft(playerPos);
+		        }
+	        break;
+	        case 69:
+	        if(spacePressed)
+		        for (var i = 0; i < 2; i++)
+		        {
+		        	playerPos = rotateRight(playerPos);
+		        }
+	        break;
+	        
+		}
+	}
+}
+
+function rotateLeft(position)
+{
+	var boat = Array.from(battleships.keys())[boatType];
+
+
+	clearShip(boat, rotationBoat);
+
+	//validating rotation
+	var temp = --rotationBoat % 5;
+	rotationBoat = (temp == 0) ? 4 : temp;
+
+	var tilesTaken = battleships.get(boat);
+
+	// if(playerPos[0] >= tilesTaken)
+	//for  rotationBoat == 1
+	//playerPos[0] >= tilesTaken
+
+
+	createShip(boat, rotationBoat, step - 1);
+	return position;
+
+
+
+	var tilesTaken = battleships.get(boat);
+	var nameRow = "row" + playerPos[0];
+  	
+  	//validating the tiles on the right
+  	var invalidTiles = false;
+  	var tileToFill = playerPos[1] + 1;
+  	for (var i = 0; i < tilesTaken; i++)
+  	{
+  		var newTile = document.getElementById(nameRow).cells[tileToFill];
+  		if(/ship/.test(newTile.getAttribute("class")) || /peg/.test(newTile.getAttribute("class")))
+  		{
+  			invalidTiles = true;
+  			break;
+  		}
+  		else
+  		{
+  			tileToFill++;
+  		}
+  	}
+
+  	if(!invalidTiles)
+  	{
+  		createShip(boat, rotationBoat, step-1);
+		spacePressed = true;
+  	}
+  	else
+  	{
+  		spacePressed = false;
+  	}
+
+}
+
+function rotateRight(position)
+{
+	var boat = Array.from(battleships.keys())[boatType];
+	clearShip(boat, rotationBoat);
+	var temp = ++rotationBoat % 5;
+	rotationBoat = (temp == 0) ? 1 : temp;
+	createShip(boat, rotationBoat, step - 1);
+	return position;
+}
+
+function up(position)
+{
+	if(position[0] < 1)
+	{
+		return position;
+	}
+	else
+	{
+		//get row
+		nameRow = "row" + (position[0] - 1);
+
+		//new player: get left cell from player
+  		var newPlayer = document.getElementById(nameRow).cells[position[1]];
+  		if(/ship/.test(newPlayer.getAttribute("class")) || /peg/.test(newPlayer.getAttribute("class")))
+	  	{
+	  		return position;
+	  	}
+
+		var player = document.getElementById("player");
+  		player.removeAttribute("id");
+  		player.textContent = "■";
+
+  		newPlayer.setAttribute("id", "player");
+  		newPlayer.textContent = "⯐";
+  		position = [position[0]-1, position[1]];
+		return position;
+	}
+}
+
+function down(position)
+{
+	if(position[0] >= rowNbr-1)
+	{
+		return position;
+	}
+	else
+	{
+		//get row
+		nameRow = "row" + (position[0] + 1);
+		//new player: get left cell from player
+  		var newPlayer = document.getElementById(nameRow).cells[position[1]];
+  		if(/ship/.test(newPlayer.getAttribute("class")) || /peg/.test(newPlayer.getAttribute("class")))
+	  	{
+	  		return position;
+	  	}
+
+		var player = document.getElementById("player");
+  		player.removeAttribute("id");
+  		player.textContent = "■";
+
+  		newPlayer.setAttribute("id", "player");
+  		newPlayer.textContent = "⯐";
+  		position = [position[0]+1, position[1]];
+		return position;
+	}
+}
+
+function left(position)
+{
+	if(position[1] < 1)
+	{
+		return position;
+	}
+	else
+	{
+	//get row
+	nameRow = "row" + position[0];
+  	
+  	//new player: get left cell from player
+  	var newPlayer = document.getElementById(nameRow).cells[position[1]-1];
+
+  	//if(newPlayer.getAttribute("class").match("/ship/") != null)
+
+	if(/ship/.test(newPlayer.getAttribute("class")) || /peg/.test(newPlayer.getAttribute("class")))
+  	{
+  		return position;
+  	}
+
+  	var player = document.getElementById("player");
+  	player.removeAttribute("id");
+  	player.textContent = "■";
+
+  	newPlayer.setAttribute("id", "player");
+  	newPlayer.textContent = "⯐";
+  	position = [position[0], position[1]-1];
+  	return position;
+  	}
+}
+
+function right(position)
+{
+	if(position[1] >= columnNbr-1)
+	{
+		return position;
+	}
+	else
+	{
+	//get row
+	nameRow = "row" + position[0];
+  	//new player: get left cell from player
+  	var newPlayer = document.getElementById(nameRow).cells[position[1]+1];
+  	if(/ship/.test(newPlayer.getAttribute("class")) || /peg/.test(newPlayer.getAttribute("class")))
+  	{
+  		return position;
+  	}
+
+  	var player = document.getElementById("player");
+  	player.removeAttribute("id");
+  	player.textContent = "■";
+  	
+
+  	newPlayer.setAttribute("id", "player");
+  	newPlayer.textContent = "⯐";
+  	position = [position[0], position[1]+1];
+  	return position;
+  	}
+}
+
+</script>
+<noscript>
+		Sorry, something went wrong with Javascript
+</noscript>
+
+<br><br><br>
+<hr>
+<p>Controls:</p>
+<p>[Space] - Place Ship</p>
+<p>[W]/[A]/[S]/[D] - Move Cursor Up/Left/Down/Right</p>
+<p>[Shift] + [W]/[A]/[S]/[D] - Move Cursor Twice as Fast</p>
+<p>[Q]/[E] - Rotate Ship Left/Right</p>
+<p>[Shift] + [Q]/[E] - Rotate Ship Twice as Fast</p>
+
+</body>
+</html>
+

@@ -1,0 +1,162 @@
+#gridTable, td{
+  border: 1px dotted beige;
+  border-collapse: collapse;
+  font-size: 200%;
+  padding: 0px;
+  margin: 0px;
+  line-height: 31px;
+  color: rgb(47,79,79, .15);
+  margin-left: auto;
+  margin-right: auto;
+  letter-spacing: -7px;
+}
+
+/*to shift the boxes to be inside the grid*/
+td
+{
+  -webkit-transform: translate(-10%,-10%);
+}
+
+#gridTable
+{
+	background-image: url('game_back/oceanTile.png');
+	/*make the table unselectable*/
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    /*shadow*/
+    box-shadow: 5px 5px 10px rgb(3,70,157);
+  	animation: wavePattern 10s infinite;
+}
+
+
+@keyframes wavePattern
+{
+  50% {box-shadow: 7px 8px 15px 2px #1f62ba;}
+}
+
+
+form
+{
+	padding-bottom: 1%;
+}
+
+html
+{
+	height: 100%;
+}
+
+body
+{
+	background-image: linear-gradient(to top, rgb(5,71,224), rgb(147,221,248), rgb(135,224,253));
+
+/*rgb(9,47,121), rgb(3,70,157)*/
+
+/*
+	rgb(5,71,224)*/
+/*	background-image: radial-gradient(circle, rgb(234,242,245), rgb(147,221,248), rgb(3,70,157), rgb(9,47,121));*/
+
+	text-align: center;
+	color: rgb(7, 7, 7);
+	font-family: 'Source Sans Pro', sans-serif;
+	margin: 0px;
+
+}
+
+h1, h5
+{
+	text-decoration: underline;
+	line-height: 5%;
+}
+
+#title
+{
+	width: 100%;
+	/*to get the font to be of this color*/
+	background-color: rgb(182,255,255);
+	background-image: linear-gradient(to bottom right, black, rgb(5,71,224));
+	-webkit-background-clip: text;
+  	-webkit-text-fill-color: transparent;
+
+	display: flex;
+  	flex-direction: column;
+  	box-shadow: inset 1px 1px 20px 1px rgba(77,169,234,255), 0px 2px 5px rgba(77,169,234,255);
+}
+
+input
+{
+	background-color: rgb(27,62,102);
+	color: white;
+	padding: 8px 10px;
+	border: 3px solid rgb(27,62,102);
+	transition: 0.18s ease-in-out;
+}
+
+input[type="submit"], input[type="button"]
+{
+	padding: 10px 12px;
+	cursor: pointer;
+}
+
+input:focus
+{
+  background-color: rgb(31,110,162);
+}
+
+input:hover
+{
+	background-color: #1E90FF;
+}
+
+
+#player
+{
+	color: rgb(0,79,0);
+	font-size: 138%;
+	-webkit-transform: translate(-9%,3%);
+}
+
+[class*="-ship"], [class*="-peg"]
+{
+	font-size: 138%;
+	-webkit-transform: translate(-10%,1%);
+}
+
+[class="red-peg"]
+{
+	color: red;
+}
+
+[class="white-peg"]
+{
+	color: white;
+}
+
+[class*="Destroyer"]
+{
+	color: brown;
+}
+
+[class*="Submarine"]
+{
+	color: black;
+}
+
+[class*="Cruiser"]
+{
+	color: blue;
+}
+
+[class*="Battleship"]
+{
+	color: purple;
+}
+
+[class*="Carrier"]
+{
+	color: darkgreen;
+}
